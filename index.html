@@ -45,17 +45,17 @@
         <canvas id="canvas"></canvas>
         <div id="overlay" class="faded overlay"></div>
         
-        <!-- START: Geocaching Avatar & Title (Getrennt für freie Mitte) -->
-        <div id="custom-title" style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; width: 100%;">
-            <h1 style="font-family: 'Exo 2', sans-serif; font-size: 42px; color: #e74c3c; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.6); margin: 0; letter-spacing: 2px;">HEXA-CORE</h1>
+        <!-- START: Geocaching Avatar & Title (Kompakt und am Rand platziert) -->
+        <div id="custom-title" style="position: absolute; top: 3%; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; pointer-events: none; white-space: nowrap;">
+            <h1 style="font-family: 'Exo 2', sans-serif; font-size: 38px; color: #e74c3c; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.6); margin: 0; letter-spacing: 2px;">HEXA-CORE</h1>
         </div>
         
-        <div id="custom-avatar" style="position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none;">
-            <img src="images/Avatar.jpg" alt="Avatar" style="height: 180px; width: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        <div id="custom-avatar" style="position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; pointer-events: none;">
+            <img src="images/Avatar.jpg" alt="Avatar" style="height: 140px; max-height: 25vh; width: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
         </div>
         <!-- ENDE: Geocaching Avatar & Title -->
         
-        <div id='startBtn' ></div>
+        <div id='startBtn'></div>
         <div id="helpScreen" class='unselectable'>
             <div id='inst_main_body'></div>
         </div>
@@ -87,7 +87,7 @@
         
         <!-- START: Geocaching Logik & UI Steuerung -->
         <script type="text/javascript">
-            // 1. Blendet Titel, Avatar und Highscore dynamisch ein/aus
+            // Blendet Titel, Avatar und Highscore dynamisch ein/aus
             setInterval(function() {
                 var startBtn = document.getElementById('startBtn');
                 var customTitle = document.getElementById('custom-title');
@@ -96,13 +96,13 @@
                 var highScoreHeader = document.getElementById('HIGHSCORE');
 
                 if (startBtn && window.getComputedStyle(startBtn).display !== 'none') {
-                    // STARTMENÜ: Zeige eigenes Design, verstecke Original-Highscore
+                    // STARTMENÜ
                     if (customTitle) customTitle.style.display = 'block';
                     if (customAvatar) customAvatar.style.display = 'block';
                     if (highScoreText) highScoreText.style.visibility = 'hidden';
                     if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
                 } else {
-                    // IM SPIEL: Verstecke eigenes Design, zeige Original-Highscore
+                    // IM SPIEL
                     if (customTitle) customTitle.style.display = 'none';
                     if (customAvatar) customAvatar.style.display = 'none';
                     if (highScoreText) highScoreText.style.visibility = '';
@@ -110,14 +110,14 @@
                 }
             }, 100);
 
-            // 2. Score-Hack (2500 Punkte für Koordinaten)
+            // Score-Hack (2500 Punkte für Koordinaten)
             setInterval(function() {
                 if (typeof score !== 'undefined' && score >= 2500) {
                     if (!window.cacheKnacked) {
                         window.cacheKnacked = true;
                         
                         // Hier deinen eigenen Base64-String einfügen!
-                        // "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5" ist der Base64-Code für "N 51 12.345 E 009 56.789"
+                        // "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5" = N 51 12.345 E 009 56.789
                         var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
                         
                         alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
