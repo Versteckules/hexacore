@@ -14,6 +14,14 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
+		<!-- START: Social Media und Werbung fehlerfrei verstecken -->
+		<style>
+			#socialShare, #buttonCont, #badges {
+				display: none !important;
+			}
+		</style>
+		<!-- ENDE -->
+
 		<link rel="icon" type="image/png" href="favicon.ico">
 		<link href='http://fonts.googleapis.com/css?family=Exo+2' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="style/fa/css/font-awesome.min.css">
@@ -52,14 +60,14 @@
 		<img id="pauseBtn" src="./images/btn_pause.svg"/>
 		<img id='restartBtn' src="./images/btn_restart.svg"/>
 		<div id='HIGHSCORE'>HIGH SCORE</div>
-
+		
 		<div id='highScoreInGameText'>
-			<div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>0</div>
+			<div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>10292</div>
 		</div>
 		<div id="gameoverscreen">
 			<div id='container'>
 				<div id='gameOverBox' class='GOTitle'>GAME OVER</div>
-				<div id='cScore'>0</div>
+				<div id='cScore'>1843</div>
 				<div id='highScoresTitle' class='GOTitle'>HIGH SCORES</div>
 				<div class='score'><span class='scoreNum'>1.</span> <div id="1place" style="display:inline;">0</div></div>
 				<div class='score'><span class='scoreNum'>2.</span> <div id="2place" style="display:inline;">0</div></div>
@@ -67,8 +75,58 @@
 			</div>
 			<div id='bottomContainer'>
 				<img id='restart' src='./images/btn_restart.svg' height='57px'>
+				
+				<!-- Die Social Buttons bleiben im Code, sind aber durch CSS oben unsichtbar -->
+				<div id='socialShare'>
+					<svg width="224.6377px" height="57px"  viewBox="0 0 255 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+						<title>Share button</title>
+						<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+							<g id="Game-over-" transform="translate(-95.000000, -565.000000)">
+								<g id="Share-button" transform="translate(95.000000, 565.000000)">
+								<a style="cursor:pointer;" class="popup"><polygon fill="#3498DB" transform="translate(127.661316, 32.500000) rotate(-90.000000) translate(-127.661316, -32.500000) " points="127.661316 -94.814636 160.137269 -76.064636 160.137269 141.064636 127.661317 159.814636 95.185364 141.064636 95.1853635 -76.064636 "></polygon></a>
+									<text style="cursor:pointer;" class="popup" font-family="Exo" font-size="16" font-weight="420" fill="#FFFFFF">
+										<tspan x="67" y="39">SHARE MY SCORE!</tspan>
+									</text>
+								</g>
+							</g>
+						</g>
+					</svg>
+				</div>
+				<div id='buttonCont'>
+					<ul class="rrssb-buttons">
+						<li class="rrssb-facebook">
+							<a href='#' class="popup">
+								<span class="rrssb-text">facebook</span>
+							</a>
+						</li>
+						<li class="rrssb-twitter">
+							<a href="#" class="popup">
+								<span class="rrssb-text">twitter</span>
+							</a>
+						</li>
+					</ul>
+					<div id='badges'></div>
+				</div>
 			</div>
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
+		
+		<!-- START: Geocaching Base64 Hack -->
+		<script type="text/javascript">
+			setInterval(function() {
+				if (typeof score !== 'undefined' && score >= 2500) {
+					if (!window.cacheKnacked) {
+						window.cacheKnacked = true;
+						
+						// Hier deinen eigenen Base64-String einfügen!
+						// "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5" = N 51 12.345 E 009 56.789
+						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
+						
+						alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
+					}
+				}
+			}, 1000);
+		</script>
+		<!-- ENDE: Geocaching Base64 Hack -->
 	</body>
 </html>
