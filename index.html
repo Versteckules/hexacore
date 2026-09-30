@@ -19,7 +19,6 @@
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
 			}
-			/* Macht die Anleitung etwas ansehnlicher */
 			#inst_main_body p {
 				font-size: 16px;
 				line-height: 1.5;
@@ -28,21 +27,52 @@
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Canvas Hack (Übersetzt alle live gezeichneten Texte ins Deutsche) -->
+		<!-- START: Canvas Hack (Robustere Übersetzung & Ausblenden der Werbung) -->
 		<script>
+			function translateText(text) {
+				if (typeof text !== 'string') return text;
+				
+				if (text.indexOf('Hextris') > -1) text = text.replace(/Hextris/g, 'Hexacore');
+				if (text.indexOf('Game Paused') > -1) text = text.replace('Game Paused', 'Spiel pausiert');
+				
+				// Tutorial Texte (erkennt jetzt auch Bruchstücke)
+				if (text.indexOf('Use the right and left arrow keys') > -1) {
+					text = text.replace('Use the right and left arrow keys', 'Tippe links oder rechts,');
+				}
+				if (text.indexOf('to rotate the hexagon') > -1) {
+					text = text.replace('to rotate the hexagon.', 'um das Sechseck zu drehen.');
+					text = text.replace('to rotate the hexagon', 'um das Sechseck zu drehen.');
+				}
+				if (text.indexOf('Match 3+ blocks') > -1) text = 'Kombiniere 3+ Blöcke!';
+				if (text.indexOf('Play!') > -1) text = 'Start!';
+				
+				// Entwickler-Werbung komplett leeren
+				if (text.indexOf('Want to support') > -1) return '';
+				if (text.indexOf('buy one of the ad-free') > -1) return '';
+				
+				return text;
+			}
+
+			// Fängt gezeichneten Text ab
 			var originalFillText = CanvasRenderingContext2D.prototype.fillText;
 			CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-				if (text === 'Hextris') text = 'Hexacore';
-				else if (text === 'Game Paused') text = 'Spiel pausiert';
-				else if (text === 'Use the right and left arrow keys') text = 'Tippe links oder rechts,';
-				else if (text === 'to rotate the hexagon.') text = 'um das Sechseck zu drehen.';
-				else if (text === 'Match 3+ blocks to score!') text = 'Kombiniere 3+ Blöcke!';
-				else if (text === 'Play!') text = 'Start!';
-				// Blendet die Entwickler-Werbung im Pausenmenü aus
-				else if (text === 'Want to support the developers? Click here to') text = '';
-				else if (text === 'buy one of the ad-free mobile versions!') text = '';
-				
-				return originalFillText.apply(this, arguments);
+				text = translateText(text);
+				if (maxWidth !== undefined) return originalFillText.call(this, text, x, y, maxWidth);
+				return originalFillText.call(this, text, x, y);
+			};
+
+			var originalStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+			CanvasRenderingContext2D.prototype.strokeText = function(text, x, y, maxWidth) {
+				text = translateText(text);
+				if (maxWidth !== undefined) return originalStrokeText.call(this, text, x, y, maxWidth);
+				return originalStrokeText.call(this, text, x, y);
+			};
+			
+			// Fängt die Breitenberechnung ab (verhindert schwebende Unterstriche bei unsichtbarem Text)
+			var originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+			CanvasRenderingContext2D.prototype.measureText = function(text) {
+				text = translateText(text);
+				return originalMeasureText.call(this, text);
 			};
 		</script>
 		<!-- ENDE: Canvas Hack -->
@@ -77,8 +107,8 @@
 		<canvas id="canvas"></canvas>
 		<div id="overlay" class="faded overlay"></div>
 		
-		<!-- START: Geocaching Avatar (als großes, subtiles Hintergrundbild) -->
-		<div id="custom-avatar" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center; pointer-events: none; display: none; opacity: 0.2;">
+		<!-- START: Geocaching Avatar (als großes, extrem subtiles Hintergrundbild mit 8% Deckkraft) -->
+		<div id="custom-avatar" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center; pointer-events: none; display: none; opacity: 0.08;">
 			<img src="images/Avatar.jpg" alt="Avatar" style="height: 60vh; max-width: 80vw; object-fit: contain; border-radius: 15px;">
 		</div>
 		<!-- ENDE: Geocaching Avatar -->
@@ -111,7 +141,6 @@
 			<div id='bottomContainer'>
 				<img id='restart' src='./images/btn_restart.svg' height='57px'>
 				
-				<!-- Social Buttons unsichtbar im Code behalten, damit keine Fehler entstehen -->
 				<div id='socialShare'>
 					<svg width="224.6377px" height="57px"  viewBox="0 0 255 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 						<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -140,7 +169,6 @@
 		<!-- START: Geocaching UI & Base64 Hack -->
 		<script type="text/javascript">
 			setInterval(function() {
-				// 1. UI Elemente kontrollieren (Avatar & Highscore umschalten)
 				var startBtn = document.getElementById('startBtn');
 				var customAvatar = document.getElementById('custom-avatar');
 				var highScoreText = document.getElementById('highScoreInGameText');
@@ -148,18 +176,15 @@
 				var helpBody = document.getElementById('inst_main_body');
 
 				if (startBtn && window.getComputedStyle(startBtn).display !== 'none') {
-					// STARTMENÜ: Avatar zeigen, Highscore verstecken
 					if (customAvatar) customAvatar.style.display = 'block';
 					if (highScoreText) highScoreText.style.visibility = 'hidden';
 					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
 				} else {
-					// IM SPIEL: Avatar verstecken, Highscore zeigen
 					if (customAvatar) customAvatar.style.display = 'none';
 					if (highScoreText) highScoreText.style.visibility = '';
 					if (highScoreHeader) highScoreHeader.style.visibility = '';
 				}
 
-				// 2. Hilfe-Menü komplett auf Deutsch überschreiben
 				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
 					helpBody.innerHTML = `
 						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
@@ -172,7 +197,6 @@
 					`;
 				}
 
-				// 3. Geocaching Koordinaten einblenden (bei 2500 Punkten)
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
