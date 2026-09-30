@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html lang='de'>
 	<head>
 		<title>Hexacore</title>
-		<meta name="description" content="An addictive puzzle game inspired by Tetris.">
+		<meta name="description" content="Ein Geocaching Puzzle.">
 		<link rel="manifest" href="manifest.webmanifest">
 		<meta name="apple-itunes-app" content="app-id=903769553"/>
-		<meta name="apple-mobile-web-app-title" content="Hextris">
+		<meta name="apple-mobile-web-app-title" content="Hexacore">
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<link rel="apple-touch-icon" sizes="120x120" href="images/icons/apple-touch-120.png">
 		<link rel="apple-touch-icon" sizes="152x152" href="images/icons/apple-touch-152.png">
@@ -19,16 +19,29 @@
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
 			}
+			/* Macht die Anleitung etwas ansehnlicher */
+			#inst_main_body p {
+				font-size: 16px;
+				line-height: 1.5;
+				margin-bottom: 15px;
+			}
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Canvas Hack (Ändert das gemalte Logo Hextris -> Hexacore) -->
+		<!-- START: Canvas Hack (Übersetzt alle live gezeichneten Texte ins Deutsche) -->
 		<script>
 			var originalFillText = CanvasRenderingContext2D.prototype.fillText;
 			CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-				if (text === 'Hextris') {
-					text = 'Hexacore';
-				}
+				if (text === 'Hextris') text = 'Hexacore';
+				else if (text === 'Game Paused') text = 'Spiel pausiert';
+				else if (text === 'Use the right and left arrow keys') text = 'Tippe links oder rechts,';
+				else if (text === 'to rotate the hexagon.') text = 'um das Sechseck zu drehen.';
+				else if (text === 'Match 3+ blocks to score!') text = 'Kombiniere 3+ Blöcke!';
+				else if (text === 'Play!') text = 'Start!';
+				// Blendet die Entwickler-Werbung im Pausenmenü aus
+				else if (text === 'Want to support the developers? Click here to') text = '';
+				else if (text === 'buy one of the ad-free mobile versions!') text = '';
+				
 				return originalFillText.apply(this, arguments);
 			};
 		</script>
@@ -79,17 +92,18 @@
 		<img id="pauseBtn" src="./images/btn_pause.svg"/>
 		<img id='restartBtn' src="./images/btn_restart.svg"/>
 		
-		<div id='HIGHSCORE'>HIGH SCORE</div>
+		<!-- Statische Texte auf Deutsch übersetzt -->
+		<div id='HIGHSCORE'>HIGHSCORE</div>
 		
 		<div id='highScoreInGameText'>
-			<div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>0</div>
+			<div id='highScoreInGameTextHeader'>HIGHSCORE</div><div id='currentHighScore'>0</div>
 		</div>
 		
 		<div id="gameoverscreen">
 			<div id='container'>
-				<div id='gameOverBox' class='GOTitle'>GAME OVER</div>
+				<div id='gameOverBox' class='GOTitle'>SPIEL VORBEI</div>
 				<div id='cScore'>0</div>
-				<div id='highScoresTitle' class='GOTitle'>HIGH SCORES</div>
+				<div id='highScoresTitle' class='GOTitle'>BESTENLISTE</div>
 				<div class='score'><span class='scoreNum'>1.</span> <div id="1place" style="display:inline;">0</div></div>
 				<div class='score'><span class='scoreNum'>2.</span> <div id="2place" style="display:inline;">0</div></div>
 				<div class='score'><span class='scoreNum'>3.</span> <div id="3place" style="display:inline;">0</div></div>
@@ -105,7 +119,7 @@
 								<g id="Share-button" transform="translate(95.000000, 565.000000)">
 								<a style="cursor:pointer;" class="popup"><polygon fill="#3498DB" transform="translate(127.661316, 32.500000) rotate(-90.000000) translate(-127.661316, -32.500000) " points="127.661316 -94.814636 160.137269 -76.064636 160.137269 141.064636 127.661317 159.814636 95.185364 141.064636 95.1853635 -76.064636 "></polygon></a>
 									<text style="cursor:pointer;" class="popup" font-family="Exo" font-size="16" font-weight="420" fill="#FFFFFF">
-										<tspan x="67" y="39">SHARE MY SCORE!</tspan>
+										<tspan x="67" y="39">TEILEN</tspan>
 									</text>
 								</g>
 							</g>
@@ -126,7 +140,7 @@
 		<!-- START: Geocaching UI & Base64 Hack -->
 		<script type="text/javascript">
 			setInterval(function() {
-				// 1. UI Elemente kontrollieren
+				// 1. UI Elemente kontrollieren (Avatar & Highscore umschalten)
 				var startBtn = document.getElementById('startBtn');
 				var customAvatar = document.getElementById('custom-avatar');
 				var highScoreText = document.getElementById('highScoreInGameText');
@@ -145,19 +159,20 @@
 					if (highScoreHeader) highScoreHeader.style.visibility = '';
 				}
 
-				// 2. Hilfe-Menü umschreiben
-				if (helpBody) {
-					// Hextris zu Hexacore ändern
-					if (helpBody.innerHTML.includes('Hextris')) {
-						helpBody.innerHTML = helpBody.innerHTML.replace(/Hextris/g, 'Hexacore');
-					}
-					// Geocaching-Hinweis anfügen
-					if (helpBody.innerHTML !== '' && !helpBody.innerHTML.includes('2500 Punkte')) {
-						helpBody.innerHTML += '<br><br><div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 15px; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px;">GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!</div>';
-					}
+				// 2. Hilfe-Menü komplett auf Deutsch überschreiben
+				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
+					helpBody.innerHTML = `
+						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
+						<p>Das Ziel von <strong>Hexacore</strong> ist es zu verhindern, dass die Blöcke das äußere graue Sechseck verlassen.</p>
+						<p>Tippe auf die linke oder rechte Bildschirmhälfte, um das Sechseck zu drehen.</p>
+						<p>Sammle Punkte, indem du 3 oder mehr Blöcke der gleichen Farbe berühren lässt.</p>
+						<div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 25px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; border: 2px solid #e74c3c;">
+							GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
+						</div>
+					`;
 				}
 
-				// 3. Geocaching Koordinaten einblenden
+				// 3. Geocaching Koordinaten einblenden (bei 2500 Punkten)
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
