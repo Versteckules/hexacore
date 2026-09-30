@@ -27,7 +27,7 @@
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack für lückenlose Übersetzung (Hintergrund-Texte) -->
+		<!-- START: Kugelsicherer Canvas Hack (Übersetzt das Spiel) -->
 		<script>
 			(function() {
 				function translateText(text) {
@@ -35,15 +35,18 @@
 					var str = String(text);
 					
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
+					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
 					if (/Use the right and left/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str)) return 'um das Sechseck zu drehen.';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
 					if (/^Play!$/i.test(str)) return 'Start!';
 					
+					if (/Want to support/i.test(str)) return '';
+					if (/buy one of the/i.test(str)) return '';
+					
 					return str;
 				}
 
-				// Überschreibt tief im System die Mal- und Mess-Funktionen des Browsers
 				var methods = ['fillText', 'strokeText', 'measureText'];
 				methods.forEach(function(method) {
 					var original = CanvasRenderingContext2D.prototype[method];
@@ -88,15 +91,15 @@
 		<canvas id="canvas"></canvas>
 		<div id="overlay" class="faded overlay"></div>
 		
-		<!-- START: Geocaching Avatar (als großes, extrem subtiles Hintergrundbild mit 8% Deckkraft) -->
+		<!-- START: Geocaching Avatar (Hintergrundbild mit 8% Deckkraft) -->
 		<div id="custom-avatar" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center; pointer-events: none; display: none; opacity: 0.08;">
 			<img src="images/Avatar.jpg" alt="Avatar" style="height: 60vh; max-width: 80vw; object-fit: contain; border-radius: 15px;">
 		</div>
 		<!-- ENDE: Geocaching Avatar -->
 
-		<!-- START: In-Game Hinweis für Geocacher (Perfekt positioniert, extrem hoher Z-Index) -->
-		<div id="geocaching-hint" style="position: absolute; top: 14%; left: 50%; transform: translateX(-50%); z-index: 99999; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 16px; font-weight: bold; background: rgba(231, 76, 60, 0.9); border: 2px solid #c0392b; padding: 6px 20px; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
-			ZIEL: 2500 PUNKTE
+		<!-- START: In-Game Hinweis für Geocacher (Maximaler Z-Index) -->
+		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 2147483647; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
+			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
 		</div>
 		<!-- ENDE: In-Game Hinweis -->
 
@@ -153,57 +156,38 @@
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
 		
-		<!-- START: Geocaching UI, HTML-Texte & Base64 Hack -->
+		<!-- START: Geocaching UI Steuerung & Code-Entschlüsselung -->
 		<script type="text/javascript">
 			setInterval(function() {
-				// 1. ÜBERSETZUNG VON DYNAMISCHEM HTML (Pause-Screen)
-				var allElements = document.querySelectorAll('*');
-				for (var i = 0; i < allElements.length; i++) {
-					var el = allElements[i];
-					if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
-						if (el.innerHTML === 'Game Paused') {
-							el.innerHTML = 'Spiel pausiert';
-						}
-						if (el.innerHTML.indexOf('Want to support the developers') > -1 || el.innerHTML.indexOf('buy one of the ad-free') > -1) {
-							el.style.display = 'none';
-							if (el.parentNode && el.parentNode.tagName === 'A') {
-								el.parentNode.style.display = 'none';
-							}
-						}
-					}
-				}
-
-				// 2. UI-STEUERUNG
-				var startBtn = document.getElementById('startBtn');
-				var gameOverScreen = document.getElementById('gameoverscreen');
 				var customAvatar = document.getElementById('custom-avatar');
 				var inGameHint = document.getElementById('geocaching-hint');
 				var highScoreText = document.getElementById('highScoreInGameText');
 				var highScoreHeader = document.getElementById('HIGHSCORE');
 				var helpBody = document.getElementById('inst_main_body');
 
-				var isMenu = startBtn && window.getComputedStyle(startBtn).display !== 'none';
-				var isGameOver = gameOverScreen && window.getComputedStyle(gameOverScreen).display !== 'none';
-
-				// Avatar im Startmenü zeigen
-				if (isMenu) {
-					if (customAvatar) customAvatar.style.display = 'block';
-					if (highScoreText) highScoreText.style.visibility = 'hidden';
-					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
-				} else {
-					if (customAvatar) customAvatar.style.display = 'none';
-					if (highScoreText) highScoreText.style.visibility = '';
-					if (highScoreHeader) highScoreHeader.style.visibility = '';
+				// Sichere Steuerung über die interne gameState-Variable von Hextris
+				// 0 = Menü, 1 = Im Spiel, 2 = Game Over, 3 = Pause
+				if (typeof gameState !== 'undefined') {
+					if (gameState === 0) {
+						if (customAvatar) customAvatar.style.display = 'block';
+						if (inGameHint) inGameHint.style.display = 'none';
+						if (highScoreText) highScoreText.style.visibility = 'hidden';
+						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+					} else if (gameState === 1 || gameState === 3) {
+						if (customAvatar) customAvatar.style.display = 'none';
+						if (inGameHint) inGameHint.style.display = 'block';
+						if (highScoreText) highScoreText.style.visibility = '';
+						if (highScoreHeader) highScoreHeader.style.visibility = '';
+					} else {
+						// Game Over (gameState 2)
+						if (customAvatar) customAvatar.style.display = 'none';
+						if (inGameHint) inGameHint.style.display = 'none';
+						if (highScoreText) highScoreText.style.visibility = '';
+						if (highScoreHeader) highScoreHeader.style.visibility = '';
+					}
 				}
 
-				// Rotes Ziel-Banner NUR während dem aktiven Spielen anzeigen
-				if (isMenu || isGameOver) {
-					if (inGameHint) inGameHint.style.display = 'none';
-				} else {
-					if (inGameHint) inGameHint.style.display = 'block';
-				}
-
-				// 3. HILFE-MENÜ ÜBERSETZEN
+				// Hilfe-Menü komplett auf Deutsch überschreiben
 				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
 					helpBody.innerHTML = `
 						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
@@ -211,12 +195,12 @@
 						<p>Tippe auf die linke oder rechte Bildschirmhälfte, um das Sechseck zu drehen.</p>
 						<p>Sammle Punkte, indem du 3 oder mehr Blöcke der gleichen Farbe berühren lässt.</p>
 						<div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 25px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; border: 2px solid #e74c3c;">
-							<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
+							GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
 						</div>
 					`;
 				}
 
-				// 4. KOORDINATEN ENTSCHLÜSSELN
+				// Koordinaten entschlüsseln
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
@@ -229,6 +213,6 @@
 				}
 			}, 200);
 		</script>
-		<!-- ENDE: Geocaching UI, HTML-Texte & Base64 Hack -->
+		<!-- ENDE: Geocaching UI Steuerung & Code-Entschlüsselung -->
 	</body>
 </html>
