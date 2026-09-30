@@ -14,20 +14,26 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
-		<!-- START: Social Media verstecken -->
+		<!-- START: CSS Anpassungen -->
 		<style>
+			/* Social Media verstecken */
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
 			}
+			/* Anleitung lesbarer machen */
 			#inst_main_body p {
 				font-size: 16px;
 				line-height: 1.5;
 				margin-bottom: 15px;
 			}
+			/* Game Over Screen auf dem Handy sauber zentrieren */
+			#gameoverscreen #container {
+				top: 20% !important;
+			}
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack (Übersetzt das Spiel) -->
+		<!-- START: Kugelsicherer Canvas Hack (Übersetzt das Spiel & fixt Titel-Breite) -->
 		<script>
 			(function() {
 				function translateText(text) {
@@ -47,7 +53,8 @@
 					return str;
 				}
 
-				var methods = ['fillText', 'strokeText', 'measureText'];
+				// Überschreibt strokeText und measureText
+				var methods = ['strokeText', 'measureText'];
 				methods.forEach(function(method) {
 					var original = CanvasRenderingContext2D.prototype[method];
 					CanvasRenderingContext2D.prototype[method] = function() {
@@ -57,6 +64,21 @@
 						return original.apply(this, arguments);
 					};
 				});
+
+				// Spezielle Logik für fillText, um das "Hexacore"-Wort auf dem Handy zu stauchen
+				var originalFillText = CanvasRenderingContext2D.prototype.fillText;
+				CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+					var translated = translateText(text);
+					
+					// Wenn Hexacore gezeichnet wird, zwingen wir es auf max. 90% der Bildschirmbreite
+					if (translated === 'Hexacore' && this.canvas) {
+						var maxW = this.canvas.width * 0.9;
+						return originalFillText.call(this, translated, x, y, maxW);
+					}
+					
+					if (maxWidth !== undefined) return originalFillText.call(this, translated, x, y, maxWidth);
+					return originalFillText.call(this, translated, x, y);
+				};
 			})();
 		</script>
 		<!-- ENDE: Canvas Hack -->
@@ -97,7 +119,7 @@
 		</div>
 		<!-- ENDE: Geocaching Avatar -->
 
-		<!-- START: In-Game Hinweis für Geocacher (Maximaler Z-Index) -->
+		<!-- START: In-Game Hinweis für Geocacher -->
 		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 2147483647; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
 			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
 		</div>
@@ -179,11 +201,11 @@
 						if (highScoreText) highScoreText.style.visibility = '';
 						if (highScoreHeader) highScoreHeader.style.visibility = '';
 					} else {
-						// Game Over (gameState 2)
+						// HIER IST DER FIX: In-Game-Score bei Game Over ausblenden!
 						if (customAvatar) customAvatar.style.display = 'none';
 						if (inGameHint) inGameHint.style.display = 'none';
-						if (highScoreText) highScoreText.style.visibility = '';
-						if (highScoreHeader) highScoreHeader.style.visibility = '';
+						if (highScoreText) highScoreText.style.visibility = 'hidden';
+						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
 					}
 				}
 
