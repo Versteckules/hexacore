@@ -45,7 +45,7 @@
 		</style>
 		<!-- ENDE: CSS -->
 
-		<!-- START: Kugelsicherer Canvas Hack (inkl. Font-Shrink für "Hexacore") -->
+		<!-- START: Kugelsicherer Canvas Hack (inkl. Kommazahlen-Fix für "Hexacore") -->
 		<script>
 			(function() {
 				function translateText(text) {
@@ -81,18 +81,22 @@
 				CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
 					var translated = translateText(text);
 					
-					// Wenn der Titel gemalt wird, verkleinern wir die Schriftart um 20%
+					// Wenn der Titel gemalt wird, verkleinern wir die Schriftart um 25% (Jetzt auch mit Kommazahlen-Support!)
 					if (translated === 'Hexacore') {
-						var currentFont = this.font;
-						this.font = currentFont.replace(/(\d+)(px)/, function(match, p1, p2) {
-							return Math.floor(parseInt(p1) * 0.8) + p2;
-						});
+						this.save(); // Speichert den Canvas Zustand
+						
+						if (this.font) {
+							// Findet Zahlen wie "55px" aber auch "55.5px" und rechnet sie * 0.75
+							this.font = this.font.replace(/(\d+(?:\.\d+)?)(px)/, function(match, size, px) {
+								return (parseFloat(size) * 0.75) + px;
+							});
+						}
 						
 						var res;
 						if (maxWidth !== undefined) res = originalFillText.call(this, translated, x, y, maxWidth);
 						else res = originalFillText.call(this, translated, x, y);
 						
-						this.font = currentFont; // Schriftgröße für den Rest des Spiels wiederherstellen
+						this.restore(); // Setzt die Schriftgröße für den Rest des Spiels wieder auf Normal
 						return res;
 					}
 
@@ -210,7 +214,6 @@
 				var highScoreHeader = document.getElementById('HIGHSCORE');
 				var helpBody = document.getElementById('inst_main_body');
 
-				// Robustere UI Prüfung (Direkt über den sichtbaren DOM, das ignoriert Handy-Fehler)
 				var isMenu = startBtn && window.getComputedStyle(startBtn).display !== 'none';
 				var isGameOver = gameOverScreen && window.getComputedStyle(gameOverScreen).display !== 'none';
 
@@ -221,7 +224,7 @@
 					if (highScoreText) highScoreText.style.visibility = 'hidden';
 					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
 				} else if (isGameOver) {
-					// Game Over Screen (Hier In-Game Score rigoros verstecken!)
+					// Game Over Screen 
 					if (customAvatar) customAvatar.style.display = 'none';
 					if (inGameHint) inGameHint.style.display = 'none';
 					if (highScoreText) highScoreText.style.visibility = 'hidden';
