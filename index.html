@@ -18,6 +18,18 @@
         <link href='http://fonts.googleapis.com/css?family=Exo+2' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" href="style/fa/css/font-awesome.min.css">
         <link rel="stylesheet" type="text/css" href="style/style.css">
+        
+        <!-- START: CSS Fix für den Play-Button -->
+        <style>
+            /* Schiebt den Start-Button ganz nach unten, damit die Karte ihn nicht verdeckt */
+            #startBtn {
+                top: auto !important;
+                bottom: 8% !important;
+                margin: 0 auto !important;
+            }
+        </style>
+        <!-- ENDE: CSS Fix -->
+
         <script type='text/javascript' src="vendor/hammer.min.js"></script>
         <script type='text/javascript' src="vendor/js.cookie.js"></script>
         <script type='text/javascript' src="vendor/jsonfn.min.js"></script>
@@ -46,9 +58,7 @@
         
         <!-- START: Geocaching Avatar, Name & Title -->
         <div id="custom-start-screen" style="position: absolute; top: 8%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; width: 100%;">
-            <!-- Hier steht der neue Name -->
             <h1 style="font-family: 'Exo 2', sans-serif; font-size: 42px; color: #e74c3c; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.6); margin: 0 0 15px 0; letter-spacing: 2px;">HEXA-CORE</h1>
-            
             <img src="images/Avatar.jpg" alt="Avatar" style="width: 150px; height: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
             <p style="font-family: 'Exo 2', sans-serif; font-size: 22px; color: #2c3e50; font-weight: bold; margin-top: 15px; text-shadow: 2px 2px 4px rgba(255,255,255,0.8);">made by versteckules</p>
         </div>
@@ -62,11 +72,12 @@
         <div class="faded overlay"></div>
         <img id="pauseBtn" src="./images/btn_pause.svg"/>
         <img id='restartBtn' src="./images/btn_restart.svg"/>
-        <div id='HIGHSCORE'>HIGH SCORE</div>
         
+        <div id='HIGHSCORE'>HIGH SCORE</div>
         <div id='highScoreInGameText'>
             <div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>0</div>
         </div>
+        
         <div id="gameoverscreen">
             <div id='container'>
                 <div id='gameOverBox' class='GOTitle'>GAME OVER</div>
@@ -83,10 +94,33 @@
         
         <script type="text/javascript" src='vendor/rrssb.min.js'></script>
         
-        <!-- START: Geocaching Score-Hack & Base64 -->
+        <!-- START: Geocaching Logik & UI Steuerung -->
         <script type="text/javascript">
+            // 1. Blendet das Menü aus und den Highscore ein, sobald das Spiel startet
             setInterval(function() {
-                // Prüft jede Sekunde, ob die globale Variable 'score' mind. 2500 ist
+                var startBtn = document.getElementById('startBtn');
+                var customScreen = document.getElementById('custom-start-screen');
+                var highScoreText = document.getElementById('highScoreInGameText');
+                var highScoreHeader = document.getElementById('HIGHSCORE');
+
+                // Prüft ob der originale Hextris-Play-Button sichtbar ist
+                if (startBtn && window.getComputedStyle(startBtn).display !== 'none') {
+                    // WIR SIND IM STARTMENÜ
+                    if (customScreen) customScreen.style.display = 'block';
+                    // Highscore unsichtbar machen
+                    if (highScoreText) highScoreText.style.visibility = 'hidden';
+                    if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+                } else {
+                    // DAS SPIEL LÄUFT ODER IST VORBEI
+                    if (customScreen) customScreen.style.display = 'none';
+                    // Kontrolle über den Highscore wieder an Hextris übergeben
+                    if (highScoreText) highScoreText.style.visibility = '';
+                    if (highScoreHeader) highScoreHeader.style.visibility = '';
+                }
+            }, 100);
+
+            // 2. Score-Hack (2500 Punkte für Koordinaten)
+            setInterval(function() {
                 if (typeof score !== 'undefined' && score >= 2500) {
                     if (!window.cacheKnacked) {
                         window.cacheKnacked = true;
@@ -100,6 +134,6 @@
                 }
             }, 1000);
         </script>
-        <!-- ENDE: Geocaching Score-Hack -->
+        <!-- ENDE: Geocaching Logik & UI Steuerung -->
     </body>
 </html>
