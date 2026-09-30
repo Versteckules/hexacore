@@ -94,9 +94,9 @@
 		</div>
 		<!-- ENDE: Geocaching Avatar -->
 
-		<!-- START: In-Game Hinweis für Geocacher (wird nur während dem Spielen angezeigt) -->
-		<div id="geocaching-hint" style="position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: #e74c3c; padding: 8px 20px; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); pointer-events: none; display: none; white-space: nowrap;">
-			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
+		<!-- START: In-Game Hinweis für Geocacher (Perfekt positioniert, extrem hoher Z-Index) -->
+		<div id="geocaching-hint" style="position: absolute; top: 14%; left: 50%; transform: translateX(-50%); z-index: 99999; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 16px; font-weight: bold; background: rgba(231, 76, 60, 0.9); border: 2px solid #c0392b; padding: 6px 20px; border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
+			ZIEL: 2500 PUNKTE
 		</div>
 		<!-- ENDE: In-Game Hinweis -->
 
@@ -160,14 +160,12 @@
 				var allElements = document.querySelectorAll('*');
 				for (var i = 0; i < allElements.length; i++) {
 					var el = allElements[i];
-					// Wir prüfen nur Elemente, die direkten Text enthalten (Leaf Nodes)
 					if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
 						if (el.innerHTML === 'Game Paused') {
 							el.innerHTML = 'Spiel pausiert';
 						}
 						if (el.innerHTML.indexOf('Want to support the developers') > -1 || el.innerHTML.indexOf('buy one of the ad-free') > -1) {
 							el.style.display = 'none';
-							// Falls es in einem <a> Link liegt, auch den Container unsichtbar machen
 							if (el.parentNode && el.parentNode.tagName === 'A') {
 								el.parentNode.style.display = 'none';
 							}
@@ -213,7 +211,7 @@
 						<p>Tippe auf die linke oder rechte Bildschirmhälfte, um das Sechseck zu drehen.</p>
 						<p>Sammle Punkte, indem du 3 oder mehr Blöcke der gleichen Farbe berühren lässt.</p>
 						<div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 25px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; border: 2px solid #e74c3c;">
-							GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
+							<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
 						</div>
 					`;
 				}
@@ -231,5 +229,6 @@
 				}
 			}, 200);
 		</script>
+		<!-- ENDE: Geocaching UI, HTML-Texte & Base64 Hack -->
 	</body>
 </html>
