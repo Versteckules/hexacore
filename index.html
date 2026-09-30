@@ -27,7 +27,7 @@
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack für lückenlose Übersetzung -->
+		<!-- START: Kugelsicherer Canvas Hack für lückenlose Übersetzung (Hintergrund-Texte) -->
 		<script>
 			(function() {
 				function translateText(text) {
@@ -35,15 +35,10 @@
 					var str = String(text);
 					
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
-					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
 					if (/Use the right and left/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str)) return 'um das Sechseck zu drehen.';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
 					if (/^Play!$/i.test(str)) return 'Start!';
-					
-					// Werbung komplett killen (leerer String lässt auch die Striche verschwinden)
-					if (/Want to support/i.test(str)) return '';
-					if (/buy one of the/i.test(str)) return '';
 					
 					return str;
 				}
@@ -158,9 +153,29 @@
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
 		
-		<!-- START: Geocaching UI & Base64 Hack -->
+		<!-- START: Geocaching UI, HTML-Texte & Base64 Hack -->
 		<script type="text/javascript">
 			setInterval(function() {
+				// 1. ÜBERSETZUNG VON DYNAMISCHEM HTML (Pause-Screen)
+				var allElements = document.querySelectorAll('*');
+				for (var i = 0; i < allElements.length; i++) {
+					var el = allElements[i];
+					// Wir prüfen nur Elemente, die direkten Text enthalten (Leaf Nodes)
+					if (el.childNodes.length === 1 && el.childNodes[0].nodeType === 3) {
+						if (el.innerHTML === 'Game Paused') {
+							el.innerHTML = 'Spiel pausiert';
+						}
+						if (el.innerHTML.indexOf('Want to support the developers') > -1 || el.innerHTML.indexOf('buy one of the ad-free') > -1) {
+							el.style.display = 'none';
+							// Falls es in einem <a> Link liegt, auch den Container unsichtbar machen
+							if (el.parentNode && el.parentNode.tagName === 'A') {
+								el.parentNode.style.display = 'none';
+							}
+						}
+					}
+				}
+
+				// 2. UI-STEUERUNG
 				var startBtn = document.getElementById('startBtn');
 				var gameOverScreen = document.getElementById('gameoverscreen');
 				var customAvatar = document.getElementById('custom-avatar');
@@ -190,7 +205,7 @@
 					if (inGameHint) inGameHint.style.display = 'block';
 				}
 
-				// Hilfe-Menü komplett auf Deutsch überschreiben
+				// 3. HILFE-MENÜ ÜBERSETZEN
 				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
 					helpBody.innerHTML = `
 						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
@@ -203,7 +218,7 @@
 					`;
 				}
 
-				// Geocaching Koordinaten einblenden
+				// 4. KOORDINATEN ENTSCHLÜSSELN
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
@@ -216,6 +231,5 @@
 				}
 			}, 200);
 		</script>
-		<!-- ENDE: Geocaching UI & Base64 Hack -->
 	</body>
 </html>
