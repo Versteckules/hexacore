@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='en'>
 	<head>
-		<title>Hexa-Core</title>
+		<title>Hexacore</title>
 		<meta name="description" content="An addictive puzzle game inspired by Tetris.">
 		<link rel="manifest" href="manifest.webmanifest">
 		<meta name="apple-itunes-app" content="app-id=903769553"/>
@@ -14,13 +14,25 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
-		<!-- START: Social Media und Werbung fehlerfrei verstecken -->
+		<!-- START: Social Media verstecken -->
 		<style>
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
 			}
 		</style>
 		<!-- ENDE -->
+
+		<!-- START: Canvas Hack (Ändert das gemalte Logo Hextris -> Hexacore) -->
+		<script>
+			var originalFillText = CanvasRenderingContext2D.prototype.fillText;
+			CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
+				if (text === 'Hextris') {
+					text = 'Hexacore';
+				}
+				return originalFillText.apply(this, arguments);
+			};
+		</script>
+		<!-- ENDE: Canvas Hack -->
 
 		<link rel="icon" type="image/png" href="favicon.ico">
 		<link href='http://fonts.googleapis.com/css?family=Exo+2' rel='stylesheet' type='text/css'>
@@ -51,6 +63,13 @@
 	<body>
 		<canvas id="canvas"></canvas>
 		<div id="overlay" class="faded overlay"></div>
+		
+		<!-- START: Geocaching Avatar (wird dynamisch ein-/ausgeblendet) -->
+		<div id="custom-avatar" style="position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; pointer-events: none; display: none;">
+			<img src="images/Avatar.jpg" alt="Avatar" style="height: 140px; max-height: 25vh; width: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+		</div>
+		<!-- ENDE: Geocaching Avatar -->
+
 		<div id='startBtn' ></div>
 		<div id="helpScreen" class='unselectable'>
 			<div id='inst_main_body'></div>
@@ -59,15 +78,17 @@
 		<div class="faded overlay"></div>
 		<img id="pauseBtn" src="./images/btn_pause.svg"/>
 		<img id='restartBtn' src="./images/btn_restart.svg"/>
+		
 		<div id='HIGHSCORE'>HIGH SCORE</div>
 		
 		<div id='highScoreInGameText'>
-			<div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>10292</div>
+			<div id='highScoreInGameTextHeader'>HIGH SCORE</div><div id='currentHighScore'>0</div>
 		</div>
+		
 		<div id="gameoverscreen">
 			<div id='container'>
 				<div id='gameOverBox' class='GOTitle'>GAME OVER</div>
-				<div id='cScore'>1843</div>
+				<div id='cScore'>0</div>
 				<div id='highScoresTitle' class='GOTitle'>HIGH SCORES</div>
 				<div class='score'><span class='scoreNum'>1.</span> <div id="1place" style="display:inline;">0</div></div>
 				<div class='score'><span class='scoreNum'>2.</span> <div id="2place" style="display:inline;">0</div></div>
@@ -76,10 +97,9 @@
 			<div id='bottomContainer'>
 				<img id='restart' src='./images/btn_restart.svg' height='57px'>
 				
-				<!-- Die Social Buttons bleiben im Code, sind aber durch CSS oben unsichtbar -->
+				<!-- Social Buttons unsichtbar im Code behalten, damit keine Fehler entstehen -->
 				<div id='socialShare'>
 					<svg width="224.6377px" height="57px"  viewBox="0 0 255 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-						<title>Share button</title>
 						<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
 							<g id="Game-over-" transform="translate(-95.000000, -565.000000)">
 								<g id="Share-button" transform="translate(95.000000, 565.000000)">
@@ -94,16 +114,8 @@
 				</div>
 				<div id='buttonCont'>
 					<ul class="rrssb-buttons">
-						<li class="rrssb-facebook">
-							<a href='#' class="popup">
-								<span class="rrssb-text">facebook</span>
-							</a>
-						</li>
-						<li class="rrssb-twitter">
-							<a href="#" class="popup">
-								<span class="rrssb-text">twitter</span>
-							</a>
-						</li>
+						<li class="rrssb-facebook"><a href='#' class="popup"></a></li>
+						<li class="rrssb-twitter"><a href="#" class="popup"></a></li>
 					</ul>
 					<div id='badges'></div>
 				</div>
@@ -111,22 +123,53 @@
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
 		
-		<!-- START: Geocaching Base64 Hack -->
+		<!-- START: Geocaching UI & Base64 Hack -->
 		<script type="text/javascript">
 			setInterval(function() {
+				// 1. UI Elemente kontrollieren
+				var startBtn = document.getElementById('startBtn');
+				var customAvatar = document.getElementById('custom-avatar');
+				var highScoreText = document.getElementById('highScoreInGameText');
+				var highScoreHeader = document.getElementById('HIGHSCORE');
+				var helpBody = document.getElementById('inst_main_body');
+
+				if (startBtn && window.getComputedStyle(startBtn).display !== 'none') {
+					// STARTMENÜ: Avatar zeigen, Highscore verstecken
+					if (customAvatar) customAvatar.style.display = 'block';
+					if (highScoreText) highScoreText.style.visibility = 'hidden';
+					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+				} else {
+					// IM SPIEL: Avatar verstecken, Highscore zeigen
+					if (customAvatar) customAvatar.style.display = 'none';
+					if (highScoreText) highScoreText.style.visibility = '';
+					if (highScoreHeader) highScoreHeader.style.visibility = '';
+				}
+
+				// 2. Hilfe-Menü umschreiben
+				if (helpBody) {
+					// Hextris zu Hexacore ändern
+					if (helpBody.innerHTML.includes('Hextris')) {
+						helpBody.innerHTML = helpBody.innerHTML.replace(/Hextris/g, 'Hexacore');
+					}
+					// Geocaching-Hinweis anfügen
+					if (helpBody.innerHTML !== '' && !helpBody.innerHTML.includes('2500 Punkte')) {
+						helpBody.innerHTML += '<br><br><div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 15px; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px;">GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!</div>';
+					}
+				}
+
+				// 3. Geocaching Koordinaten einblenden
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
 						
-						// Hier deinen eigenen Base64-String einfügen!
-						// "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5" = N 51 12.345 E 009 56.789
+						// Hier deinen Base64-String einfügen!
 						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
 						
 						alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
 					}
 				}
-			}, 1000);
+			}, 200);
 		</script>
-		<!-- ENDE: Geocaching Base64 Hack -->
+		<!-- ENDE: Geocaching UI & Base64 Hack -->
 	</body>
 </html>
