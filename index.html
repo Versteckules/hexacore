@@ -18,17 +18,6 @@
         <link href='http://fonts.googleapis.com/css?family=Exo+2' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" href="style/fa/css/font-awesome.min.css">
         <link rel="stylesheet" type="text/css" href="style/style.css">
-        
-        <!-- START: CSS Fix für den Play-Button -->
-        <style>
-            /* Schiebt den Start-Button ganz nach unten, damit die Karte ihn nicht verdeckt */
-            #startBtn {
-                top: auto !important;
-                bottom: 8% !important;
-                margin: 0 auto !important;
-            }
-        </style>
-        <!-- ENDE: CSS Fix -->
 
         <script type='text/javascript' src="vendor/hammer.min.js"></script>
         <script type='text/javascript' src="vendor/js.cookie.js"></script>
@@ -56,13 +45,15 @@
         <canvas id="canvas"></canvas>
         <div id="overlay" class="faded overlay"></div>
         
-        <!-- START: Geocaching Avatar, Name & Title -->
-        <div id="custom-start-screen" style="position: absolute; top: 8%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; width: 100%;">
-            <h1 style="font-family: 'Exo 2', sans-serif; font-size: 42px; color: #e74c3c; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.6); margin: 0 0 15px 0; letter-spacing: 2px;">HEXA-CORE</h1>
-            <img src="images/Avatar.jpg" alt="Avatar" style="width: 150px; height: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-            <p style="font-family: 'Exo 2', sans-serif; font-size: 22px; color: #2c3e50; font-weight: bold; margin-top: 15px; text-shadow: 2px 2px 4px rgba(255,255,255,0.8);">made by versteckules</p>
+        <!-- START: Geocaching Avatar & Title (Getrennt für freie Mitte) -->
+        <div id="custom-title" style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; width: 100%;">
+            <h1 style="font-family: 'Exo 2', sans-serif; font-size: 42px; color: #e74c3c; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.6); margin: 0; letter-spacing: 2px;">HEXA-CORE</h1>
         </div>
-        <!-- ENDE: Geocaching Avatar, Name & Title -->
+        
+        <div id="custom-avatar" style="position: absolute; bottom: 5%; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none;">
+            <img src="images/Avatar.jpg" alt="Avatar" style="height: 180px; width: auto; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+        </div>
+        <!-- ENDE: Geocaching Avatar & Title -->
         
         <div id='startBtn' ></div>
         <div id="helpScreen" class='unselectable'>
@@ -96,24 +87,24 @@
         
         <!-- START: Geocaching Logik & UI Steuerung -->
         <script type="text/javascript">
-            // 1. Blendet das Menü aus und den Highscore ein, sobald das Spiel startet
+            // 1. Blendet Titel, Avatar und Highscore dynamisch ein/aus
             setInterval(function() {
                 var startBtn = document.getElementById('startBtn');
-                var customScreen = document.getElementById('custom-start-screen');
+                var customTitle = document.getElementById('custom-title');
+                var customAvatar = document.getElementById('custom-avatar');
                 var highScoreText = document.getElementById('highScoreInGameText');
                 var highScoreHeader = document.getElementById('HIGHSCORE');
 
-                // Prüft ob der originale Hextris-Play-Button sichtbar ist
                 if (startBtn && window.getComputedStyle(startBtn).display !== 'none') {
-                    // WIR SIND IM STARTMENÜ
-                    if (customScreen) customScreen.style.display = 'block';
-                    // Highscore unsichtbar machen
+                    // STARTMENÜ: Zeige eigenes Design, verstecke Original-Highscore
+                    if (customTitle) customTitle.style.display = 'block';
+                    if (customAvatar) customAvatar.style.display = 'block';
                     if (highScoreText) highScoreText.style.visibility = 'hidden';
                     if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
                 } else {
-                    // DAS SPIEL LÄUFT ODER IST VORBEI
-                    if (customScreen) customScreen.style.display = 'none';
-                    // Kontrolle über den Highscore wieder an Hextris übergeben
+                    // IM SPIEL: Verstecke eigenes Design, zeige Original-Highscore
+                    if (customTitle) customTitle.style.display = 'none';
+                    if (customAvatar) customAvatar.style.display = 'none';
                     if (highScoreText) highScoreText.style.visibility = '';
                     if (highScoreHeader) highScoreHeader.style.visibility = '';
                 }
