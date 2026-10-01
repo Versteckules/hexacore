@@ -14,57 +14,54 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
-		<!-- START: CSS Bugfixes für Handy & Layout -->
+		<!-- START: CSS Anpassungen -->
 		<style>
-			/* Social Media rigoros verstecken */
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
 			}
-			/* Anleitung lesbarer machen */
 			#inst_main_body p {
 				font-size: 16px;
 				line-height: 1.5;
 				margin-bottom: 15px;
 			}
-			/* Game Over Screen auf dem Handy sauber positionieren & zentrieren */
 			#gameoverscreen #container {
-				position: absolute !important;
-				top: 25% !important;
-				left: 50% !important;
-				transform: translateX(-50%) !important;
-				margin: 0 !important;
-				width: 100%;
-			}
-			#bottomContainer {
-				position: absolute !important;
-				bottom: 15% !important;
-				left: 50% !important;
-				transform: translateX(-50%) !important;
-				margin: 0 !important;
+				top: 20% !important;
 			}
 		</style>
-		<!-- ENDE: CSS -->
+		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack (inkl. Kommazahlen-Fix für "Hexacore") -->
+		<!-- START: Kugelsicherer Canvas Hack (Jetzt auch mit Handy-Sätzen!) -->
 		<script>
 			(function() {
 				function translateText(text) {
 					if (text === undefined || text === null) return text;
 					var str = String(text);
 					
+					// Titel & Buttons
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
-					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
+					if (/^Play!$/i.test(str)) return 'Start!';
+					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
+					
+					// PC Tutorial
 					if (/Use the right and left/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str)) return 'um das Sechseck zu drehen.';
-					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
-					if (/^Play!$/i.test(str)) return 'Start!';
 					
+					// Handy Tutorial
+					if (/Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/of the screen to rotate/i.test(str)) return 'um das Sechseck zu drehen.';
+					if (/sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
+					
+					// Canvas "Game Paused" (Falls es dort gezeichnet wird)
+					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
+					
+					// Werbung Canvas killen
 					if (/Want to support/i.test(str)) return '';
 					if (/buy one of the/i.test(str)) return '';
 					
 					return str;
 				}
 
+				// Überschreibt strokeText und measureText
 				var methods = ['strokeText', 'measureText'];
 				methods.forEach(function(method) {
 					var original = CanvasRenderingContext2D.prototype[method];
@@ -76,30 +73,16 @@
 					};
 				});
 
-				// fillText gesondert behandeln, um "Hexacore" auf dem Handy passend zu verkleinern
+				// Spezielle Logik für fillText (staucht "Hexacore" auf dem Handy)
 				var originalFillText = CanvasRenderingContext2D.prototype.fillText;
 				CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
 					var translated = translateText(text);
 					
-					// Wenn der Titel gemalt wird, verkleinern wir die Schriftart um 25% (Jetzt auch mit Kommazahlen-Support!)
-					if (translated === 'Hexacore') {
-						this.save(); // Speichert den Canvas Zustand
-						
-						if (this.font) {
-							// Findet Zahlen wie "55px" aber auch "55.5px" und rechnet sie * 0.75
-							this.font = this.font.replace(/(\d+(?:\.\d+)?)(px)/, function(match, size, px) {
-								return (parseFloat(size) * 0.75) + px;
-							});
-						}
-						
-						var res;
-						if (maxWidth !== undefined) res = originalFillText.call(this, translated, x, y, maxWidth);
-						else res = originalFillText.call(this, translated, x, y);
-						
-						this.restore(); // Setzt die Schriftgröße für den Rest des Spiels wieder auf Normal
-						return res;
+					if (translated === 'Hexacore' && this.canvas) {
+						var maxW = this.canvas.width * 0.9;
+						return originalFillText.call(this, translated, x, y, maxW);
 					}
-
+					
 					if (maxWidth !== undefined) return originalFillText.call(this, translated, x, y, maxWidth);
 					return originalFillText.call(this, translated, x, y);
 				};
@@ -143,7 +126,7 @@
 		</div>
 		<!-- ENDE: Geocaching Avatar -->
 
-		<!-- START: In-Game Hinweis für Geocacher (Maximaler Z-Index) -->
+		<!-- START: In-Game Hinweis für Geocacher -->
 		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 2147483647; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
 			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
 		</div>
@@ -202,42 +185,58 @@
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
 		
-		<!-- START: Geocaching UI Steuerung & Code-Entschlüsselung -->
+		<!-- START: Geocaching UI Steuerung & Ressourcen-schonender HTML Hack -->
 		<script type="text/javascript">
 			setInterval(function() {
-				var startBtn = document.getElementById('startBtn');
-				var gameOverScreen = document.getElementById('gameoverscreen');
-				
 				var customAvatar = document.getElementById('custom-avatar');
 				var inGameHint = document.getElementById('geocaching-hint');
 				var highScoreText = document.getElementById('highScoreInGameText');
 				var highScoreHeader = document.getElementById('HIGHSCORE');
 				var helpBody = document.getElementById('inst_main_body');
 
-				var isMenu = startBtn && window.getComputedStyle(startBtn).display !== 'none';
-				var isGameOver = gameOverScreen && window.getComputedStyle(gameOverScreen).display !== 'none';
-
-				if (isMenu) {
-					// Hauptmenü
-					if (customAvatar) customAvatar.style.display = 'block';
-					if (inGameHint) inGameHint.style.display = 'none';
-					if (highScoreText) highScoreText.style.visibility = 'hidden';
-					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
-				} else if (isGameOver) {
-					// Game Over Screen 
-					if (customAvatar) customAvatar.style.display = 'none';
-					if (inGameHint) inGameHint.style.display = 'none';
-					if (highScoreText) highScoreText.style.visibility = 'hidden';
-					if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
-				} else {
-					// Im Spiel (oder Pausiert)
-					if (customAvatar) customAvatar.style.display = 'none';
-					if (inGameHint) inGameHint.style.display = 'block';
-					if (highScoreText) highScoreText.style.visibility = 'visible';
-					if (highScoreHeader) highScoreHeader.style.visibility = 'visible';
+				// Sichere Steuerung über die interne gameState-Variable von Hextris
+				// 0 = Menü, 1 = Im Spiel, 2 = Game Over, 3 = Pause
+				if (typeof gameState !== 'undefined') {
+					if (gameState === 0) {
+						if (customAvatar) customAvatar.style.display = 'block';
+						if (inGameHint) inGameHint.style.display = 'none';
+						if (highScoreText) highScoreText.style.visibility = 'hidden';
+						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+					} else if (gameState === 1) {
+						if (customAvatar) customAvatar.style.display = 'none';
+						if (inGameHint) inGameHint.style.display = 'block';
+						if (highScoreText) highScoreText.style.visibility = '';
+						if (highScoreHeader) highScoreHeader.style.visibility = '';
+					} else if (gameState === 3) {
+						// === DAS SPIEL PAUSIERT GERADE ===
+						if (customAvatar) customAvatar.style.display = 'none';
+						if (inGameHint) inGameHint.style.display = 'block';
+						if (highScoreText) highScoreText.style.visibility = '';
+						if (highScoreHeader) highScoreHeader.style.visibility = '';
+						
+						// Nur WÄHREND der Pause durchsuchen wir HTML (Spart 99% Handyakku und verhindert Abstürze!)
+						var divs = document.getElementsByTagName('div');
+						for (var i = 0; i < divs.length; i++) {
+							if (divs[i].innerHTML === 'Game Paused') {
+								divs[i].innerHTML = 'Spiel pausiert';
+							}
+							if (divs[i].innerHTML.indexOf('Want to support') > -1 || divs[i].innerHTML.indexOf('buy one of the') > -1) {
+								divs[i].style.display = 'none';
+								if (divs[i].parentNode && divs[i].parentNode.tagName === 'A') {
+									divs[i].parentNode.style.display = 'none';
+								}
+							}
+						}
+					} else {
+						// Game Over (gameState 2)
+						if (customAvatar) customAvatar.style.display = 'none';
+						if (inGameHint) inGameHint.style.display = 'none';
+						if (highScoreText) highScoreText.style.visibility = 'hidden';
+						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+					}
 				}
 
-				// Hilfe-Menü auf Deutsch
+				// Hilfe-Menü komplett auf Deutsch überschreiben
 				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
 					helpBody.innerHTML = `
 						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
