@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='de'>
 	<head>
-		<title>Hexacore</title>
+		<title>Hexacore - GC Finale</title>
 		<meta name="description" content="Ein Geocaching Puzzle.">
 		<link rel="manifest" href="manifest.webmanifest">
 		<meta name="apple-itunes-app" content="app-id=903769553"/>
@@ -14,11 +14,22 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
-		<!-- START: CSS Anpassungen -->
+		<!-- START: CSS Anpassungen (Zwingt das Layout auf dem Handy in die korrekte Form) -->
 		<style>
-			#socialShare, #buttonCont, #badges { display: none !important; }
+			/* Social Media Elemente ausblenden */
+			#socialShare, .rrssb-buttons, #badges { display: none !important; }
+			
+			/* Highscore etwas nach unten schieben (Schutz vor dem Handy-Rand / Kamera) */
+			#HIGHSCORE, #highScoreInGameText { top: 25px !important; }
+			
+			/* Game Over Box sauber zentrieren */
+			#gameoverscreen #container { top: 20% !important; margin-top: 0 !important; }
+			
+			/* Restart Button zwingend im Bildschirm behalten (Überschreibt fehlerhafte Spiel-Mathematik) */
+			#bottomContainer { bottom: 8% !important; margin-bottom: 0 !important; }
+
+			/* Anleitung lesbarer machen */
 			#inst_main_body p { font-size: 16px; line-height: 1.5; margin-bottom: 15px; }
-			#gameoverscreen #container { top: 28% !important; }
 		</style>
 		<!-- ENDE -->
 
@@ -32,7 +43,7 @@
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
 					if (/^Play!$/i.test(str)) return 'Start!';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
-					if (/Use the right and left/i.test(str) || /Tap the screen's left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/Use the right and left/i.test(str) || /Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str) || /sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
 					
 					return str;
@@ -112,7 +123,7 @@
 			ZIEL: 3000 PUNKTE FÜR KOORDINATEN
 		</div>
 
-		<!-- START: Vollbild Geocaching-Sieger-Popup (Ersetzt das alte alert) -->
+		<!-- START: Vollbild Geocaching-Sieger-Popup -->
 		<div id="victory-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 25, 30, 0.95); z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: 'Exo 2', sans-serif;">
 			<div style="background: rgba(0,0,0,0.6); padding: 40px 20px; border-radius: 20px; border: 2px solid #2ecc71; box-shadow: 0 0 40px rgba(46, 204, 113, 0.4); width: 85%; max-width: 400px;">
 				<h1 style="color: #2ecc71; font-size: 32px; font-weight: 900; margin: 0 0 15px 0; text-shadow: 0 0 15px #2ecc71; letter-spacing: 1px;">SYSTEM GEKNACKT</h1>
@@ -202,7 +213,7 @@
 					}
 				}
 
-				// Koordinaten entschlüsseln (JETZT BEI 3000 PUNKTE)
+				// Koordinaten entschlüsseln (BEI 3000 PUNKTE)
 				if (typeof score !== 'undefined' && score >= 3000) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
