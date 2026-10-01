@@ -32,7 +32,7 @@
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
 					if (/^Play!$/i.test(str)) return 'Start!';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
-					if (/Use the right and left/i.test(str) || /Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/Use the right and left/i.test(str) || /Tap the screen's left and right/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str) || /sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
 					
 					return str;
@@ -107,10 +107,24 @@
 			<img src="images/Avatar.jpg" alt="Avatar" style="height: 60vh; max-width: 80vw; object-fit: contain; border-radius: 15px;">
 		</div>
 		
-		<!-- START: In-Game Hinweis für Geocacher -->
-		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 2147483647; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
-			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
+		<!-- START: In-Game Hinweis für Geocacher (Jetzt 3000 Punkte) -->
+		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 10000; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
+			ZIEL: 3000 PUNKTE FÜR KOORDINATEN
 		</div>
+
+		<!-- START: Vollbild Geocaching-Sieger-Popup (Ersetzt das alte alert) -->
+		<div id="victory-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20, 25, 30, 0.95); z-index: 2147483647; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-family: 'Exo 2', sans-serif;">
+			<div style="background: rgba(0,0,0,0.6); padding: 40px 20px; border-radius: 20px; border: 2px solid #2ecc71; box-shadow: 0 0 40px rgba(46, 204, 113, 0.4); width: 85%; max-width: 400px;">
+				<h1 style="color: #2ecc71; font-size: 32px; font-weight: 900; margin: 0 0 15px 0; text-shadow: 0 0 15px #2ecc71; letter-spacing: 1px;">SYSTEM GEKNACKT</h1>
+				<p style="color: #ecf0f1; font-size: 18px; margin-bottom: 25px;">Glückwunsch! Hier sind die Final-Koordinaten:</p>
+				<div style="background: #111; padding: 15px; border-radius: 10px; border: 1px solid #e74c3c; box-shadow: inset 0 0 10px rgba(231, 76, 60, 0.3);">
+					<span id="secret-coords" style="color: #e74c3c; font-family: monospace; font-size: 22px; font-weight: bold; letter-spacing: 1px;"></span>
+				</div>
+				<p style="color: #95a5a6; font-size: 14px; margin-top: 20px; margin-bottom: 30px;">(Am besten sofort einen Screenshot machen!)</p>
+				<button onclick="document.getElementById('victory-popup').style.display='none';" style="background: #2ecc71; color: #111; border: none; padding: 12px 30px; font-size: 18px; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4); text-transform: uppercase;">Weiter spielen</button>
+			</div>
+		</div>
+		<!-- ENDE: Sieger-Popup -->
 
 		<div id='startBtn' ></div>
 		<div id="helpScreen" class='unselectable'>
@@ -188,15 +202,17 @@
 					}
 				}
 
-				// Koordinaten entschlüsseln
-				if (typeof score !== 'undefined' && score >= 2500) {
+				// Koordinaten entschlüsseln (JETZT BEI 3000 PUNKTE)
+				if (typeof score !== 'undefined' && score >= 3000) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
 						
 						// HIER DEINEN BASE64 CODE EINTRAGEN!
 						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
 						
-						alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
+						// Koordinaten ins schicke Popup schreiben und einblenden
+						document.getElementById('secret-coords').innerText = atob(secretBase64);
+						document.getElementById('victory-popup').style.display = 'flex';
 					}
 				}
 			}, 200);
