@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='de'>
 	<head>
-		<title>Hexacore - GC Finale</title>
+		<title>Hexacore</title>
 		<meta name="description" content="Ein Geocaching Puzzle.">
 		<link rel="manifest" href="manifest.webmanifest">
 		<meta name="apple-itunes-app" content="app-id=903769553"/>
@@ -120,7 +120,7 @@
 		
 		<!-- START: In-Game Hinweis für Geocacher (Jetzt 3000 Punkte) -->
 		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 10000; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
-			ZIEL: 3000 PUNKTE FÜR KOORDINATEN
+			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
 		</div>
 
 		<!-- START: Vollbild Geocaching-Sieger-Popup -->
@@ -214,7 +214,7 @@
 				}
 
 				// Koordinaten entschlüsseln (BEI 3000 PUNKTE)
-				if (typeof score !== 'undefined' && score >= 3000) {
+				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
 						
