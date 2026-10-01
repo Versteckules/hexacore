@@ -14,7 +14,7 @@
 		<link rel="apple-touch-icon" sizes="512x512" href="images/icons/apple-touch-512.png">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, minimal-ui"/>
 		
-		<!-- START: CSS Anpassungen -->
+		<!-- START: CSS Anpassungen (Behebt Überlappung der Bestenliste) -->
 		<style>
 			#socialShare, #buttonCont, #badges {
 				display: none !important;
@@ -24,67 +24,71 @@
 				line-height: 1.5;
 				margin-bottom: 15px;
 			}
+			/* Schiebt den Game Over Screen nach unten, damit der Score Platz hat */
 			#gameoverscreen #container {
-				top: 20% !important;
+				top: 28% !important;
 			}
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack (Jetzt auch mit Handy-Sätzen!) -->
+		<!-- START: Kugelsicherer Canvas Hack für Mobile Browser -->
 		<script>
 			(function() {
 				function translateText(text) {
 					if (text === undefined || text === null) return text;
 					var str = String(text);
 					
-					// Titel & Buttons
+					// Ersetzt Titel & Buttons
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
 					if (/^Play!$/i.test(str)) return 'Start!';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
-					
-					// PC Tutorial
-					if (/Use the right and left/i.test(str)) return 'Tippe links oder rechts,';
-					if (/to rotate the hexagon/i.test(str)) return 'um das Sechseck zu drehen.';
-					
-					// Handy Tutorial
-					if (/Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
-					if (/of the screen to rotate/i.test(str)) return 'um das Sechseck zu drehen.';
-					if (/sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
-					
-					// Canvas "Game Paused" (Falls es dort gezeichnet wird)
 					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
 					
-					// Werbung Canvas killen
-					if (/Want to support/i.test(str)) return '';
-					if (/buy one of the/i.test(str)) return '';
+					// Erkennt PC & Mobile Tutorial-Texte
+					if (/Use the right and left/i.test(str) || /Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/to rotate the hexagon/i.test(str) || /sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
+					
+					// Tötet die Entwickler-Werbung
+					if (/Want to support/i.test(str) || /buy one of the/i.test(str)) return '';
 					
 					return str;
 				}
 
-				// Überschreibt strokeText und measureText
-				var methods = ['strokeText', 'measureText'];
-				methods.forEach(function(method) {
-					var original = CanvasRenderingContext2D.prototype[method];
-					CanvasRenderingContext2D.prototype[method] = function() {
-						if (arguments.length > 0) {
-							arguments[0] = translateText(arguments[0]);
-						}
-						return original.apply(this, arguments);
-					};
-				});
+				// Überschreibt strokeText (Mobile-sicher mit echtem Array)
+				var originalStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+				CanvasRenderingContext2D.prototype.strokeText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) args[0] = translateText(args[0]);
+					return originalStrokeText.apply(this, args);
+				};
 
-				// Spezielle Logik für fillText (staucht "Hexacore" auf dem Handy)
+				// Überschreibt measureText (entfernt die Unterstriche der Werbung)
+				var originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+				CanvasRenderingContext2D.prototype.measureText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) args[0] = translateText(args[0]);
+					
+					if (args[0] === '') return { width: 0 };
+					return originalMeasureText.apply(this, args);
+				};
+
+				// Überschreibt fillText (inkl. 15% Skalierung für "Hexacore")
 				var originalFillText = CanvasRenderingContext2D.prototype.fillText;
-				CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-					var translated = translateText(text);
-					
-					if (translated === 'Hexacore' && this.canvas) {
-						var maxW = this.canvas.width * 0.9;
-						return originalFillText.call(this, translated, x, y, maxW);
+				CanvasRenderingContext2D.prototype.fillText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) {
+						args[0] = translateText(args[0]);
+						
+						if (args[0] === 'Hexacore') {
+							this.save();
+							this.translate(args[1], args[2]);
+							this.scale(0.85, 0.85);
+							var res = originalFillText.call(this, args[0], 0, 0, args[3]);
+							this.restore();
+							return res;
+						}
 					}
-					
-					if (maxWidth !== undefined) return originalFillText.call(this, translated, x, y, maxWidth);
-					return originalFillText.call(this, translated, x, y);
+					return originalFillText.apply(this, args);
 				};
 			})();
 		</script>
@@ -185,58 +189,71 @@
 		</div>
 		<script type="text/javascript" src='vendor/rrssb.min.js'></script>
 		
-		<!-- START: Geocaching UI Steuerung & Ressourcen-schonender HTML Hack -->
+		<!-- START: Geocaching UI Steuerung -->
 		<script type="text/javascript">
 			setInterval(function() {
+				// Übersetzt eventuelle HTML-Reste sicherheitshalber mit
+				var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+				var node;
+				while (node = walker.nextNode()) {
+					if (node.nodeValue.indexOf('Game Paused') > -1) {
+						node.nodeValue = node.nodeValue.replace('Game Paused', 'Spiel pausiert');
+					}
+					if (node.nodeValue.indexOf('Want to support') > -1 || node.nodeValue.indexOf('buy one of the') > -1) {
+						node.nodeValue = '';
+						if (node.parentElement && node.parentElement.tagName === 'A') {
+							node.parentElement.style.display = 'none';
+						}
+					}
+				}
+
+				// UI Steuerung
+				var startBtn = document.getElementById('startBtn');
+				var gameOverScreen = document.getElementById('gameoverscreen');
 				var customAvatar = document.getElementById('custom-avatar');
 				var inGameHint = document.getElementById('geocaching-hint');
 				var highScoreText = document.getElementById('highScoreInGameText');
 				var highScoreHeader = document.getElementById('HIGHSCORE');
 				var helpBody = document.getElementById('inst_main_body');
 
-				// Sichere Steuerung über die interne gameState-Variable von Hextris
-				// 0 = Menü, 1 = Im Spiel, 2 = Game Over, 3 = Pause
-				if (typeof gameState !== 'undefined') {
-					if (gameState === 0) {
-						if (customAvatar) customAvatar.style.display = 'block';
-						if (inGameHint) inGameHint.style.display = 'none';
-						if (highScoreText) highScoreText.style.visibility = 'hidden';
-						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
-					} else if (gameState === 1) {
-						if (customAvatar) customAvatar.style.display = 'none';
-						if (inGameHint) inGameHint.style.display = 'block';
-						if (highScoreText) highScoreText.style.visibility = '';
-						if (highScoreHeader) highScoreHeader.style.visibility = '';
-					} else if (gameState === 3) {
-						// === DAS SPIEL PAUSIERT GERADE ===
-						if (customAvatar) customAvatar.style.display = 'none';
-						if (inGameHint) inGameHint.style.display = 'block';
-						if (highScoreText) highScoreText.style.visibility = '';
-						if (highScoreHeader) highScoreHeader.style.visibility = '';
-						
-						// Nur WÄHREND der Pause durchsuchen wir HTML (Spart 99% Handyakku und verhindert Abstürze!)
-						var divs = document.getElementsByTagName('div');
-						for (var i = 0; i < divs.length; i++) {
-							if (divs[i].innerHTML === 'Game Paused') {
-								divs[i].innerHTML = 'Spiel pausiert';
-							}
-							if (divs[i].innerHTML.indexOf('Want to support') > -1 || divs[i].innerHTML.indexOf('buy one of the') > -1) {
-								divs[i].style.display = 'none';
-								if (divs[i].parentNode && divs[i].parentNode.tagName === 'A') {
-									divs[i].parentNode.style.display = 'none';
-								}
-							}
-						}
-					} else {
-						// Game Over (gameState 2)
-						if (customAvatar) customAvatar.style.display = 'none';
-						if (inGameHint) inGameHint.style.display = 'none';
-						if (highScoreText) highScoreText.style.visibility = 'hidden';
-						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+				var isMenu = startBtn && window.getComputedStyle(startBtn).display !== 'none';
+				var isGameOver = gameOverScreen && window.getComputedStyle(gameOverScreen).display !== 'none';
+
+				// Blendet den Game Over Screen sauber ein und den laufenden Score aus
+				if (isGameOver) {
+					if (highScoreText) highScoreText.style.opacity = '0';
+					if (highScoreHeader) highScoreHeader.style.opacity = '0';
+					if (customAvatar) customAvatar.style.display = 'none';
+					if (inGameHint) inGameHint.style.display = 'none';
+				} 
+				// Menü
+				else if (isMenu) {
+					if (customAvatar) customAvatar.style.display = 'block';
+					if (inGameHint) inGameHint.style.display = 'none';
+					if (highScoreText) {
+						highScoreText.style.visibility = 'hidden';
+						highScoreText.style.opacity = '1'; 
+					}
+					if (highScoreHeader) {
+						highScoreHeader.style.visibility = 'hidden';
+						highScoreHeader.style.opacity = '1';
+					}
+				} 
+				// Im Spiel oder Pause
+				else {
+					if (customAvatar) customAvatar.style.display = 'none';
+					if (inGameHint) inGameHint.style.display = 'block';
+					if (highScoreText) {
+						highScoreText.style.visibility = '';
+						highScoreText.style.opacity = '1';
+					}
+					if (highScoreHeader) {
+						highScoreHeader.style.visibility = '';
+						highScoreHeader.style.opacity = '1';
 					}
 				}
 
-				// Hilfe-Menü komplett auf Deutsch überschreiben
+				// Hilfe-Menü
 				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
 					helpBody.innerHTML = `
 						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
@@ -249,19 +266,16 @@
 					`;
 				}
 
-				// Koordinaten entschlüsseln
+				// Koordinaten Check
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
-						
-						// Hier deinen Base64-String einfügen!
-						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
-						
+						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5"; // <-- DEIN BASE64 CODE HIER
 						alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
 					}
 				}
 			}, 200);
 		</script>
-		<!-- ENDE: Geocaching UI Steuerung & Code-Entschlüsselung -->
+		<!-- ENDE -->
 	</body>
 </html>
