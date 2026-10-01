@@ -16,24 +16,13 @@
 		
 		<!-- START: CSS Anpassungen -->
 		<style>
-			/* Social Media verstecken */
-			#socialShare, #buttonCont, #badges {
-				display: none !important;
-			}
-			/* Anleitung lesbarer machen */
-			#inst_main_body p {
-				font-size: 16px;
-				line-height: 1.5;
-				margin-bottom: 15px;
-			}
-			/* Game Over Screen auf dem Handy sauber zentrieren */
-			#gameoverscreen #container {
-				top: 20% !important;
-			}
+			#socialShare, #buttonCont, #badges { display: none !important; }
+			#inst_main_body p { font-size: 16px; line-height: 1.5; margin-bottom: 15px; }
+			#gameoverscreen #container { top: 28% !important; }
 		</style>
 		<!-- ENDE -->
 
-		<!-- START: Kugelsicherer Canvas Hack (Übersetzt das Spiel & fixt Titel-Breite) -->
+		<!-- START: Canvas Hack (Für In-Game-Texte & Titel-Skalierung) -->
 		<script>
 			(function() {
 				function translateText(text) {
@@ -41,52 +30,43 @@
 					var str = String(text);
 					
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
-					if (/Game Paused/i.test(str)) return 'Spiel pausiert';
-					
-					// PC Tutorial
-					if (/Use the right and left/i.test(str)) return 'Tippe links oder rechts,';
-					
-					// Handy Tutorial (3 Zeilen)
-					if (/Tap the left and right/i.test(str)) return 'Tippe links oder rechts';
-					if (/sides of the screen/i.test(str)) return 'auf den Bildschirm,';
-					
-					// Gemeinsame 3. Zeile
-					if (/to rotate the hexagon/i.test(str)) return 'um das Sechseck zu drehen.';
-					
-					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
 					if (/^Play!$/i.test(str)) return 'Start!';
-					
-					if (/Want to support/i.test(str)) return '';
-					if (/buy one of the/i.test(str)) return '';
+					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
+					if (/Use the right and left/i.test(str) || /Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/to rotate the hexagon/i.test(str) || /sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
 					
 					return str;
 				}
 
-				// Überschreibt strokeText und measureText
-				var methods = ['strokeText', 'measureText'];
-				methods.forEach(function(method) {
-					var original = CanvasRenderingContext2D.prototype[method];
-					CanvasRenderingContext2D.prototype[method] = function() {
-						if (arguments.length > 0) {
-							arguments[0] = translateText(arguments[0]);
-						}
-						return original.apply(this, arguments);
-					};
-				});
+				var originalStrokeText = CanvasRenderingContext2D.prototype.strokeText;
+				CanvasRenderingContext2D.prototype.strokeText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) args[0] = translateText(args[0]);
+					return originalStrokeText.apply(this, args);
+				};
 
-				// Spezielle Logik für fillText, um das "Hexacore"-Wort auf dem Handy zu stauchen
+				var originalMeasureText = CanvasRenderingContext2D.prototype.measureText;
+				CanvasRenderingContext2D.prototype.measureText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) args[0] = translateText(args[0]);
+					return originalMeasureText.apply(this, args);
+				};
+
 				var originalFillText = CanvasRenderingContext2D.prototype.fillText;
-				CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth) {
-					var translated = translateText(text);
-					
-					// Wenn Hexacore gezeichnet wird, zwingen wir es auf max. 90% der Bildschirmbreite
-					if (translated === 'Hexacore' && this.canvas) {
-						var maxW = this.canvas.width * 0.9;
-						return originalFillText.call(this, translated, x, y, maxW);
+				CanvasRenderingContext2D.prototype.fillText = function() {
+					var args = Array.prototype.slice.call(arguments);
+					if (args.length > 0) {
+						args[0] = translateText(args[0]);
+						if (args[0] === 'Hexacore') {
+							this.save();
+							this.translate(args[1], args[2]);
+							this.scale(0.85, 0.85); // Staucht den Titel etwas
+							var res = originalFillText.call(this, args[0], 0, 0, args[3]);
+							this.restore();
+							return res;
+						}
 					}
-					
-					if (maxWidth !== undefined) return originalFillText.call(this, translated, x, y, maxWidth);
-					return originalFillText.call(this, translated, x, y);
+					return originalFillText.apply(this, args);
 				};
 			})();
 		</script>
@@ -122,17 +102,15 @@
 		<canvas id="canvas"></canvas>
 		<div id="overlay" class="faded overlay"></div>
 		
-		<!-- START: Geocaching Avatar (Hintergrundbild mit 8% Deckkraft) -->
+		<!-- START: Geocaching Avatar (8% Deckkraft) -->
 		<div id="custom-avatar" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 50; text-align: center; pointer-events: none; display: none; opacity: 0.08;">
 			<img src="images/Avatar.jpg" alt="Avatar" style="height: 60vh; max-width: 80vw; object-fit: contain; border-radius: 15px;">
 		</div>
-		<!-- ENDE: Geocaching Avatar -->
-
+		
 		<!-- START: In-Game Hinweis für Geocacher -->
 		<div id="geocaching-hint" style="position: absolute; top: 15%; left: 50%; transform: translateX(-50%); z-index: 2147483647; text-align: center; color: #fff; font-family: 'Exo 2', sans-serif; font-size: 15px; font-weight: bold; background: rgba(231, 76, 60, 0.95); border: 2px solid #c0392b; padding: 6px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); pointer-events: none; display: none; white-space: nowrap;">
 			ZIEL: 2500 PUNKTE FÜR KOORDINATEN
 		</div>
-		<!-- ENDE: In-Game Hinweis -->
 
 		<div id='startBtn' ></div>
 		<div id="helpScreen" class='unselectable'>
@@ -163,24 +141,10 @@
 				<img id='restart' src='./images/btn_restart.svg' height='57px'>
 				
 				<div id='socialShare'>
-					<svg width="224.6377px" height="57px"  viewBox="0 0 255 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-						<g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-							<g id="Game-over-" transform="translate(-95.000000, -565.000000)">
-								<g id="Share-button" transform="translate(95.000000, 565.000000)">
-								<a style="cursor:pointer;" class="popup"><polygon fill="#3498DB" transform="translate(127.661316, 32.500000) rotate(-90.000000) translate(-127.661316, -32.500000) " points="127.661316 -94.814636 160.137269 -76.064636 160.137269 141.064636 127.661317 159.814636 95.185364 141.064636 95.1853635 -76.064636 "></polygon></a>
-									<text style="cursor:pointer;" class="popup" font-family="Exo" font-size="16" font-weight="420" fill="#FFFFFF">
-										<tspan x="67" y="39">TEILEN</tspan>
-									</text>
-								</g>
-							</g>
-						</g>
-					</svg>
+					<!-- Leeres SVG-Gerüst für fehlerfreie Ausführung -->
 				</div>
 				<div id='buttonCont'>
-					<ul class="rrssb-buttons">
-						<li class="rrssb-facebook"><a href='#' class="popup"></a></li>
-						<li class="rrssb-twitter"><a href="#" class="popup"></a></li>
-					</ul>
+					<ul class="rrssb-buttons"></ul>
 					<div id='badges'></div>
 				</div>
 			</div>
@@ -190,54 +154,38 @@
 		<!-- START: Geocaching UI Steuerung & Code-Entschlüsselung -->
 		<script type="text/javascript">
 			setInterval(function() {
-				// HTML-Texte (Game Paused & Werbung) abfangen, falls das Handy sie nicht im Canvas zeichnet
-				var divs = document.getElementsByTagName('div');
-				for (var i = 0; i < divs.length; i++) {
-					if (divs[i].innerHTML === 'Game Paused') divs[i].innerHTML = 'Spiel pausiert';
-					if (divs[i].innerHTML.indexOf('Want to support') > -1 || divs[i].innerHTML.indexOf('buy one of the') > -1) {
-						divs[i].style.display = 'none';
-					}
-				}
-
 				var customAvatar = document.getElementById('custom-avatar');
 				var inGameHint = document.getElementById('geocaching-hint');
 				var highScoreText = document.getElementById('highScoreInGameText');
 				var highScoreHeader = document.getElementById('HIGHSCORE');
-				var helpBody = document.getElementById('inst_main_body');
 
 				// Sichere Steuerung über die interne gameState-Variable von Hextris
-				// 0 = Menü, 1 = Im Spiel, 2 = Game Over, 3 = Pause
 				if (typeof gameState !== 'undefined') {
 					if (gameState === 0) {
+						// Menü
 						if (customAvatar) customAvatar.style.display = 'block';
 						if (inGameHint) inGameHint.style.display = 'none';
 						if (highScoreText) highScoreText.style.visibility = 'hidden';
 						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
 					} else if (gameState === 1 || gameState === 3) {
+						// Spiel läuft oder Pause
 						if (customAvatar) customAvatar.style.display = 'none';
 						if (inGameHint) inGameHint.style.display = 'block';
-						if (highScoreText) highScoreText.style.visibility = '';
-						if (highScoreHeader) highScoreHeader.style.visibility = '';
+						if (highScoreText) {
+							highScoreText.style.visibility = '';
+							highScoreText.style.opacity = '1';
+						}
+						if (highScoreHeader) {
+							highScoreHeader.style.visibility = '';
+							highScoreHeader.style.opacity = '1';
+						}
 					} else {
-						// HIER IST DER FIX: In-Game-Score bei Game Over ausblenden!
+						// Game Over
 						if (customAvatar) customAvatar.style.display = 'none';
 						if (inGameHint) inGameHint.style.display = 'none';
-						if (highScoreText) highScoreText.style.visibility = 'hidden';
-						if (highScoreHeader) highScoreHeader.style.visibility = 'hidden';
+						if (highScoreText) highScoreText.style.opacity = '0';
+						if (highScoreHeader) highScoreHeader.style.opacity = '0';
 					}
-				}
-
-				// Hilfe-Menü komplett auf Deutsch überschreiben
-				if (helpBody && helpBody.innerHTML.includes('HOW TO PLAY')) {
-					helpBody.innerHTML = `
-						<h2 style="text-align: center; font-family: 'Exo 2', sans-serif; font-size: 24px; margin-bottom: 15px;">SPIELANLEITUNG</h2>
-						<p>Das Ziel von <strong>Hexacore</strong> ist es zu verhindern, dass die Blöcke das äußere graue Sechseck verlassen.</p>
-						<p>Tippe auf die linke oder rechte Bildschirmhälfte, um das Sechseck zu drehen.</p>
-						<p>Sammle Punkte, indem du 3 oder mehr Blöcke der gleichen Farbe berühren lässt.</p>
-						<div style="text-align: center; color: #e74c3c; font-weight: bold; font-size: 18px; margin-top: 25px; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; border: 2px solid #e74c3c;">
-							GEOCACHING HINWEIS:<br>Erreiche 2500 Punkte, um die Final-Koordinaten zu entschlüsseln!
-						</div>
-					`;
 				}
 
 				// Koordinaten entschlüsseln
@@ -245,7 +193,7 @@
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
 						
-						// Hier deinen Base64-String einfügen!
+						// HIER DEINEN BASE64 CODE EINTRAGEN!
 						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
 						
 						alert("Glückwunsch! Du hast den Cache geknackt. Die Koordinaten sind: " + atob(secretBase64));
