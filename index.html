@@ -43,7 +43,7 @@
 					if (/Hextris/i.test(str)) return str.replace(/Hextris/ig, 'Hexacore');
 					if (/^Play!$/i.test(str)) return 'Start!';
 					if (/Match 3\+/i.test(str)) return 'Kombiniere 3+ Blöcke!';
-					if (/Use the right and left/i.test(str) || /Tap the left and right/i.test(str)) return 'Tippe links oder rechts,';
+					if (/Use the right and left/i.test(str) || /Tap the screen's left and right/i.test(str)) return 'Tippe links oder rechts,';
 					if (/to rotate the hexagon/i.test(str) || /sides of the screen/i.test(str)) return 'um das Sechseck zu drehen.';
 					
 					return str;
