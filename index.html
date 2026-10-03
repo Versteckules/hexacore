@@ -213,15 +213,12 @@
 					}
 				}
 
-				// Koordinaten entschlüsseln (BEI 3000 PUNKTE)
 				if (typeof score !== 'undefined' && score >= 2500) {
 					if (!window.cacheKnacked) {
 						window.cacheKnacked = true;
 						
-						// HIER DEINEN BASE64 CODE EINTRAGEN!
-						var secretBase64 = "TiA1MSAxMi4zNDUgRSAwMDkgNTYuNzg5";
+						var secretBase64 = "TiA1MCAxNy42MDUgRSAwMTIgMDAuMTQ2";
 						
-						// Koordinaten ins schicke Popup schreiben und einblenden
 						document.getElementById('secret-coords').innerText = atob(secretBase64);
 						document.getElementById('victory-popup').style.display = 'flex';
 					}
